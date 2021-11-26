@@ -117,8 +117,8 @@ public class TicketFirebaseHelper {
                 data.put("priority", priority);
                 data.put("status", "1");
                 data.put("isClient", true);
-                data.put("isReplay", message.getHeader("In-Reply-To") == null ? false : true);
-                data.put("isReplay-TO", message.getHeader("In-Reply-To") == null ? null : message.getHeader("In-Reply-To")[0]);
+                data.put("isReply", message.getHeader("In-Reply-To") == null ? false : true);
+                data.put("isReply-TO", message.getHeader("In-Reply-To") == null ? null : message.getHeader("In-Reply-To")[0]);
                 data.put("ticketStarted", new Date());
 
                 ApiFuture<WriteResult> future = db.collection("tickets").document().set(data);

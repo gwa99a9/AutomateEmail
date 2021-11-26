@@ -67,9 +67,4 @@ public class InboxCountTester {
         }, 0, 2000);
 
     }
-
-    private static void initListner() {
-
-    }
-
 }
