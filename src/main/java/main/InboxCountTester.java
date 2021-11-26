@@ -1,10 +1,7 @@
 package main;
 
 import com.google.api.core.ApiFuture;
-import com.google.cloud.firestore.DocumentReference;
-import com.google.cloud.firestore.DocumentSnapshot;
-import com.google.cloud.firestore.Firestore;
-import com.google.cloud.firestore.WriteResult;
+import com.google.cloud.firestore.*;
 import com.google.firebase.cloud.FirestoreClient;
 import email.config.EmailConfig;
 import email.config.property.EmailProperty;
@@ -19,6 +16,7 @@ import javax.mail.Multipart;
 import javax.mail.Part;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
@@ -41,11 +39,11 @@ public class InboxCountTester {
             if (oldMessageCount < newMessageCount) {
                 final Message[] messages = emailListener.getInbox().getMessages(oldMessageCount, newMessageCount); // get only new messages
                 for (int i = 0; i < messages.length; i++) {
-                    System.out.println(messages[i].getSubject());
 
                     // TODO: send them to categorizer
                     addEmailToFireBase(messages[i]);
-                    //updateOldMessageCount(oldMessageCount + i);
+
+                    // updateOldMessageCount(oldMessageCount + i);
                     // TODO: oldMessageCount = oldMessageCount+i ; // update the oldCount after adding email to db
                 }
             }
@@ -58,23 +56,38 @@ public class InboxCountTester {
     }
 
     private static void addEmailToFireBase(Message message) {
-        Firestore db = FirestoreClient.getFirestore();
-
         try {
-            Map<String, Object> data = new HashMap<>();
-            data.put("subject", message.getSubject().toString());
-            data.put("body", getText(message).toString());
-            data.put("from", message.getFrom()[0].toString());
-            data.put("sender", message.getHeader("Message-ID")[0].toString());
-            data.put("priority", "1");
-            data.put("status", "1");
-            ApiFuture<WriteResult> future = db.collection("tickets").document().set(data);
-// ...
-            System.out.println("Update time : " + future.get().getUpdateTime());
+            Firestore db = FirestoreClient.getFirestore();
 
+
+            boolean hasDuplicate = hasDuplicate(message.getHeader("Message-ID")[0]);
+            if (!hasDuplicate) {
+                Map<String, Object> data = new HashMap<>();
+                data.put("subject", message.getSubject().toString());
+                data.put("body", getText(message).toString());
+                data.put("from", message.getFrom()[0].toString());
+                data.put("sender", message.getHeader("Message-ID")[0].toString());
+                data.put("priority", "1");
+                data.put("status", "1");
+                ApiFuture<WriteResult> future = db.collection("tickets").document().set(data);
+
+                System.out.println("Update time : " + future.get().getUpdateTime());
+            }
         } catch (MessagingException | IOException | InterruptedException | ExecutionException e) {
             e.printStackTrace();
         }
+    }
+
+    private static boolean hasDuplicate(String s) throws ExecutionException, InterruptedException {
+        Firestore db = FirestoreClient.getFirestore();
+        ApiFuture<QuerySnapshot> tickets = db.collection("tickets").get();
+        List<QueryDocumentSnapshot> documents = tickets.get().getDocuments();
+        for (QueryDocumentSnapshot doc : documents) {
+            if (s.equals(doc.getString("sender"))) {
+                return true;
+            }
+        }
+        return false;
     }
 
 
