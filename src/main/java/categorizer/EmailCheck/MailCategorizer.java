@@ -2,6 +2,7 @@ package categorizer.EmailCheck;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.regex.Pattern;
 
 public class MailCategorizer implements Serializable {
 
@@ -18,7 +19,6 @@ public class MailCategorizer implements Serializable {
     private static final String LOW_PRIORITY = "3";
     private static final String MID_PRIORITY = "2";
 
-
     private ArrayList<String> REQUEST_LIST = new ArrayList();
     private ArrayList<String> ISSUE_LIST = new ArrayList();
     private ArrayList<String> PRIORITY_LIST = new ArrayList();
@@ -33,8 +33,11 @@ public class MailCategorizer implements Serializable {
         }
     }
 
-
     public String getPriority(String body) {
+        Pattern pattern = Pattern.compile("(\\d{4}[/|.|-]\\d{2}[/|.|-]\\d{2}|\\d{1,2}[.|:]\\d{2}[ ][A|a|P|p][m|M])");
+        if (pattern.matcher(body).find()) {
+            return HIGH_PRIORITY;
+        }
         int highPriority = 0;
         int midPriority = 0;
         if (!body.trim().isEmpty()) {
@@ -140,8 +143,7 @@ public class MailCategorizer implements Serializable {
         if (!subject.trim().isEmpty()) {
             String[] textList = subject.split(" ");
             category = checkCategory(textList);
-        }
-        if (!body.trim().isEmpty()) {
+        } else if (!body.trim().isEmpty()) {
             String[] textList = body.split(" ");
             category = checkCategory(textList);
         }
@@ -170,6 +172,5 @@ public class MailCategorizer implements Serializable {
         }
         return requestCount > issieCount ? REQUEST : ISSUE;
     }
-
 
 }
