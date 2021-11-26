@@ -4,11 +4,15 @@ import categorizer.EmailCheck.MailCategorizer;
 import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.*;
 import com.google.firebase.cloud.FirestoreClient;
+import email.config.EmailAccount;
+import email.config.EmailConfig;
+import email.config.property.EmailProperty;
+import email.config.property.PropertyFactory;
 
-import javax.mail.BodyPart;
-import javax.mail.Message;
-import javax.mail.MessagingException;
+import javax.mail.*;
 import javax.mail.internet.ContentType;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 import java.io.IOException;
 import java.util.Date;
@@ -123,9 +127,36 @@ public class TicketFirebaseHelper {
                 ApiFuture<WriteResult> future = db.collection("tickets").document().set(data);
 
                 System.out.println("Update time : " + future.get().getUpdateTime());
+
+                //sendReplayToFirstEmail(message);
             }
         } catch (MessagingException | IOException | InterruptedException | ExecutionException e) {
             e.printStackTrace();
+        }
+    }
+
+    public static void sendReplayToFirstEmail(Message message) throws MessagingException {
+        String responseEmail = "Thank you for getting in touch with V3 Support.\n" +
+                "We have received your email and will respond as soon as possible.\n" +
+                "Thank you very much.";
+        Session emailSession = new EmailConfig(PropertyFactory.getConfig(EmailProperty.SMTP)).getSession();
+        String to = InternetAddress.toString(message
+                .getRecipients(Message.RecipientType.TO));
+
+        Message replyMessage = new MimeMessage(emailSession);
+        replyMessage = message.reply(true);
+        replyMessage.setFrom(new InternetAddress(message.getFrom()[0].toString()));
+
+        replyMessage.setText(responseEmail);
+        replyMessage.setReplyTo(message.getReplyTo());
+
+        Transport t = emailSession.getTransport("smtp");
+        try {
+            t.connect(EmailAccount.EMAIL_ADDRESS, EmailAccount.EMAIL_PASSWORD);
+            t.sendMessage(replyMessage,
+                    replyMessage.getAllRecipients());
+        } finally {
+            t.close();
         }
     }
 }
