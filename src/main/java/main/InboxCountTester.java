@@ -12,10 +12,10 @@ import email.config.property.PropertyFactory;
 import email.listener.EmailListener;
 import email.listener.EmailListenerUtil;
 import firebase.FirebaseUtil;
-import java.util.Timer;
-import java.util.TimerTask;
 
 import javax.mail.Message;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class InboxCountTester {
 
@@ -24,7 +24,6 @@ public class InboxCountTester {
         MailCategorizer mailCategorizer = new MailCategorizer();
 
         try {
-
             FirebaseUtil.initializeApp();
         } catch (Exception e) {
         }
@@ -45,13 +44,15 @@ public class InboxCountTester {
                     if (oldMessageCount < newMessageCount) {
                         final Message[] messages = emailListener.getInbox().getMessages(oldMessageCount, newMessageCount);
                         for (int i = 0; i < messages.length; i++) {
-
-                            String messageBody = TicketFirebaseHelper.getTextFromMessage(messages[i]);
-                            String category = mailCategorizer.getCategory(messageBody, messages[i].getSubject());
-                            // TODO: send them to categorizer
-                            String priority = TicketFirebaseHelper.getEmailPriority(db, messageBody, mailCategorizer);
-                            TicketFirebaseHelper.addEmailToFireBase(messages[i], category, priority);
-
+                            boolean ignoreEmail = TicketFirebaseHelper.isIgnoreEmail(messages[i].getFrom()[0]);
+                            System.out.println("email from  : " + messages[i].getFrom()[0]);
+                            if (!ignoreEmail) {
+                                String messageBody = TicketFirebaseHelper.getTextFromMessage(messages[i]);
+                                String category = mailCategorizer.getCategory(messageBody, messages[i].getSubject());
+                                // TODO: send them to categorizer
+                                String priority = TicketFirebaseHelper.getEmailPriority(db, messageBody, mailCategorizer);
+                                TicketFirebaseHelper.addEmailToFireBase(messages[i], category, priority);
+                            }
                             TicketFirebaseHelper.updateOldMessageCount(oldMessageCount + i);
                             // TODO: oldMessageCount = oldMessageCount+i ; // update the oldCount after adding email to db
                         }

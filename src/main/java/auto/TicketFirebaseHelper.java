@@ -10,15 +10,9 @@ import email.config.property.EmailProperty;
 import email.config.property.PropertyFactory;
 
 import javax.mail.*;
-import javax.mail.internet.ContentType;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeMessage;
-import javax.mail.internet.MimeMultipart;
+import javax.mail.internet.*;
 import java.io.IOException;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 
 public class TicketFirebaseHelper {
@@ -117,12 +111,14 @@ public class TicketFirebaseHelper {
                 Map<String, Object> data = new HashMap<>();
                 data.put("subject", message.getSubject());
                 data.put("body", TicketFirebaseHelper.getTextFromMessage(message));
-                data.put("from", message.getFrom()[0].toString());
+                data.put("from", new InternetAddress(message.getFrom()[0].toString()).getAddress());
                 data.put("sender", message.getHeader("Message-ID")[0]);
                 data.put("category", category);
                 data.put("priority", priority);
                 data.put("status", "1");
-                data.put("isReplay", message.getHeader("In-Reply-To")==null ? false:true);
+                data.put("isClient", true);
+                data.put("isReplay", message.getHeader("In-Reply-To") == null ? false : true);
+                data.put("isReplay-TO", message.getHeader("In-Reply-To") == null ? null : message.getHeader("In-Reply-To")[0]);
                 data.put("ticketStarted", new Date());
 
                 ApiFuture<WriteResult> future = db.collection("tickets").document().set(data);
@@ -159,5 +155,12 @@ public class TicketFirebaseHelper {
         } finally {
             t.close();
         }
+    }
+
+    public static boolean isIgnoreEmail(Address address) throws AddressException {
+        ArrayList<String> ignoreEmail = new ArrayList<String>();
+        ignoreEmail.add("zugunan@gmail.com");
+        ignoreEmail.add("jamesheller.jeewake@gmail.com");
+        return ignoreEmail.contains(new InternetAddress(address.toString()).getAddress());
     }
 }
