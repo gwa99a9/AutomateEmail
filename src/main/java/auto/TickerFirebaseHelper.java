@@ -48,8 +48,6 @@ public class TickerFirebaseHelper {
             throw new MessagingException("Multipart with no body parts not supported.");
         boolean multipartAlt = new ContentType(mimeMultipart.getContentType()).match("multipart/alternative");
         if (multipartAlt)
-            // alternatives appear in an order of increasing
-            // faithfulness to the original content. Customize as req'd.
             return getTextFromBodyPart(mimeMultipart.getBodyPart(count - 1));
         String result = "";
         for (int i = 0; i < count; i++) {

@@ -34,9 +34,13 @@ public class InboxCountTester {
             FirebaseUtil.initializeApp();
             Firestore db = FirestoreClient.getFirestore();
             ApiFuture<DocumentSnapshot> query = db.collection("settings").document("statics").get();
+            query = db.collection("settings").document("statics").get();
             DocumentSnapshot querySnapshot = query.get();
 
             int oldMessageCount = (int) querySnapshot.get("lastReadMailCount", Integer.class); // TODO: implement db
+
+            ApiFuture<DocumentSnapshot> documentSnapshotApiFuture = db.collection("settings").document("ignoreEmails").get();
+
 
             if (oldMessageCount < newMessageCount) {
                 final Message[] messages = emailListener.getInbox().getMessages(oldMessageCount, newMessageCount); // get only new messages
