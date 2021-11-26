@@ -1,0 +1,55 @@
+call on,1
+asap,1
+Special,1
+chat,2
+comment,2
+communication,1
+advance,1
+call on,2
+appeal to,1
+apply for,2
+asap,1
+inquire,1
+key issue,1
+central issue,1
+critical issue,1
+major issue,1
+fundamental issue,1
+main issue,1
+big issue,1
+climactic issue,1
+key thing,1
+basic matter,2
+bullet point,2
+essential question,2
+important aspect.1
+important item,1
+ask urgently,1
+main purpose,1
+matter of the most urgent priority,1
+very important question,1
+primary mission,2
+important,1
+appeal,2
+notice,2
+notification,2
+urgent,1
+authority,1
+crucial,1
+foremost,1
+useful,1
+valuable,1
+significant,1
+indispensable
+powerful,1
+relevant,2
+serious1
+standout,2
+weighty,2
+grave,1
+heavy,1
+earnest,1
+missing,1
+as soon as possible,1
+slow,1
+disappointed,1

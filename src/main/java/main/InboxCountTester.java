@@ -1,5 +1,6 @@
 package main;
 
+import categorizer.EmailCheck.MailCategorizer;
 import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.*;
 import com.google.firebase.cloud.FirestoreClient;
@@ -26,6 +27,7 @@ import java.util.concurrent.ExecutionException;
 public class InboxCountTester {
     public static void main(String[] args) {
         // TODO: runs on startup
+        MailCategorizer mailCategorizer = new MailCategorizer();
         EmailListener emailListener = new EmailListener(new EmailConfig(PropertyFactory.getConfig(EmailProperty.IMAP)).getSession());
         try {
             emailListener.init();
@@ -42,8 +44,21 @@ public class InboxCountTester {
                 final Message[] messages = emailListener.getInbox().getMessages(oldMessageCount, newMessageCount); // get only new messages
                 for (int i = 0; i < messages.length; i++) {
 
+                    String messageBody = getTextFromMessage(messages[i]);
+                    String category = mailCategorizer.getCategory(messageBody, messages[i].getSubject());
+                    String priority = mailCategorizer.getPriority(messageBody);
+                    if (!priority.equals("1")) {
+                        ApiFuture<QuerySnapshot> tickets = db.collection("tickets").get();
+                        List<QueryDocumentSnapshot> documents = tickets.get().getDocuments();
+                        for (QueryDocumentSnapshot doc : documents) {
+                            if ((doc.getString("body")).contains(messageBody)) {
+                                priority = "1";
+                                break;
+                            }
+                        }
+                    }
                     // TODO: send them to categorizer
-                    addEmailToFireBase(messages[i]);
+                    addEmailToFireBase(messages[i], category, priority);
 
                     // updateOldMessageCount(oldMessageCount + i);
                     // TODO: oldMessageCount = oldMessageCount+i ; // update the oldCount after adding email to db
@@ -57,7 +72,7 @@ public class InboxCountTester {
         }
     }
 
-    private static void addEmailToFireBase(Message message) {
+    private static void addEmailToFireBase(Message message, String category, String priority) {
         try {
             Firestore db = FirestoreClient.getFirestore();
 
@@ -68,7 +83,8 @@ public class InboxCountTester {
                 data.put("body", getTextFromMessage(message));
                 data.put("from", message.getFrom()[0].toString());
                 data.put("sender", message.getHeader("Message-ID")[0]);
-                data.put("priority", "1");
+                data.put("category", category);
+                data.put("priority", priority);
                 data.put("status", "1");
                 data.put("ticketStarted", new Date());
 
