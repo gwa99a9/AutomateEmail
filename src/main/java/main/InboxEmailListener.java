@@ -37,7 +37,7 @@ public class InboxEmailListener {
                         try {
                             FirebaseUtil.initializeApp();
                             Firestore db = FirestoreClient.getFirestore();
-
+                            System.out.println(message.getSubject());
                             String messageBody = TicketFirebaseHelper.getTextFromMessage(message);
                             String category = mailCategorizer.getCategory(messageBody, message.getSubject());
 

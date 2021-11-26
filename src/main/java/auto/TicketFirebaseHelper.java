@@ -78,7 +78,7 @@ public class TicketFirebaseHelper {
         return result;
     }
 
-    private static void updateOldMessageCount(int i) {
+    public static void updateOldMessageCount(int i) {
         Firestore db = FirestoreClient.getFirestore();
         try {
             DocumentReference docRef = db.collection("settings").document("statics");
@@ -122,6 +122,7 @@ public class TicketFirebaseHelper {
                 data.put("category", category);
                 data.put("priority", priority);
                 data.put("status", "1");
+                data.put("isReplay", message.getHeader("In-Reply-To")==null ? false:true);
                 data.put("ticketStarted", new Date());
 
                 ApiFuture<WriteResult> future = db.collection("tickets").document().set(data);

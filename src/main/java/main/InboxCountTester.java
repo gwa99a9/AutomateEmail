@@ -33,7 +33,7 @@ public class InboxCountTester {
             int oldMessageCount = querySnapshot.get("lastReadMailCount", Integer.class); // TODO: implement db
 
             if (oldMessageCount < newMessageCount) {
-                final Message[] messages = emailListener.getInbox().getMessages(oldMessageCount, newMessageCount); // get only new messages
+                final Message[] messages = emailListener.getInbox().getMessages(oldMessageCount, newMessageCount);
                 for (int i = 0; i < messages.length; i++) {
 
                     String messageBody = TicketFirebaseHelper.getTextFromMessage(messages[i]);
@@ -42,7 +42,7 @@ public class InboxCountTester {
                     String priority = TicketFirebaseHelper.getEmailPriority(db, messageBody, mailCategorizer);
                     TicketFirebaseHelper.addEmailToFireBase(messages[i], category, priority);
 
-                    // updateOldMessageCount(oldMessageCount + i);
+                    TicketFirebaseHelper.updateOldMessageCount(oldMessageCount + i);
                     // TODO: oldMessageCount = oldMessageCount+i ; // update the oldCount after adding email to db
                 }
             }
