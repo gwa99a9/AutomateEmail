@@ -14,6 +14,11 @@ public class MailCategorizer implements Serializable {
     private static final String PRIORITY_FILE_PATH = "src/TextFiles/priority.txt";
     private static final String DATA_FILE_PATH = System.getProperty("user.dir") + "/category.ser";
 
+    private static final String HIGH_PRIORITY = "1";
+    private static final String LOW_PRIORITY = "3";
+    private static final String MID_PRIORITY = "2";
+
+
     private ArrayList<String> REQUEST_LIST = new ArrayList();
     private ArrayList<String> ISSUE_LIST = new ArrayList();
     private ArrayList<String> PRIORITY_LIST = new ArrayList();
@@ -37,21 +42,21 @@ public class MailCategorizer implements Serializable {
                 String[] priorityString = priority.split(",");
                 if (body.toLowerCase().contains(priorityString[0].toLowerCase().trim())) {
                     switch (priorityString[1].trim().toLowerCase()) {
-                        case "1":
+                        case HIGH_PRIORITY:
                             highPriority++;
                             break;
-                        case "2":
+                        case MID_PRIORITY:
                             midPriority++;
                             break;
                     }
                 }
             }
             if (highPriority == 0 && midPriority == 0) {
-                return "3";
+                return LOW_PRIORITY;
             }
-            return highPriority > midPriority ? "1" : "2";
+            return highPriority > midPriority ? HIGH_PRIORITY : MID_PRIORITY;
         }
-        return "3";
+        return LOW_PRIORITY;
     }
 
     private void createPriorityArray() {
@@ -131,16 +136,16 @@ public class MailCategorizer implements Serializable {
     }
 
     public String getCategory(String body, String subject) {
+        String category = UNKNOWN;
         if (!subject.trim().isEmpty()) {
             String[] textList = subject.split(" ");
-            return checkCategory(textList);
+            category = checkCategory(textList);
         }
         if (!body.trim().isEmpty()) {
             String[] textList = body.split(" ");
-            return checkCategory(textList);
-        } else {
-            return UNKNOWN;
+            category = checkCategory(textList);
         }
+        return category;
     }
 
     private String checkCategory(String[] textList) {
@@ -166,10 +171,5 @@ public class MailCategorizer implements Serializable {
         return requestCount > issieCount ? REQUEST : ISSUE;
     }
 
-    public static void main(String[] args) {
-        MailCategorizer mailCategorizer = new MailCategorizer();
-        System.out.println(mailCategorizer.getCategory("This is a test email withs a request and issue issue", ""));
-        System.out.println(mailCategorizer.getPriority("this is a urgent message."));
-    }
 
 }

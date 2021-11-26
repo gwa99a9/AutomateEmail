@@ -1,5 +1,6 @@
 package auto;
 
+import categorizer.EmailCheck.MailCategorizer;
 import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.*;
 import com.google.firebase.cloud.FirestoreClient;
@@ -10,12 +11,13 @@ import javax.mail.MessagingException;
 import javax.mail.internet.ContentType;
 import javax.mail.internet.MimeMultipart;
 import java.io.IOException;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
-public class TickerFirebaseHelper {
+public class TicketFirebaseHelper {
 
     public static boolean hasDuplicate(String s) throws ExecutionException, InterruptedException {
         Firestore db = FirestoreClient.getFirestore();
@@ -83,6 +85,46 @@ public class TickerFirebaseHelper {
         } catch (InterruptedException e) {
             e.printStackTrace();
         } catch (ExecutionException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static String getEmailPriority(Firestore db, String messageBody, MailCategorizer mailCategorizer) throws InterruptedException, ExecutionException {
+        String priority = mailCategorizer.getPriority(messageBody);
+        if (!priority.equals("1")) {
+            ApiFuture<QuerySnapshot> tickets = db.collection("tickets").get();
+            List<QueryDocumentSnapshot> documents = tickets.get().getDocuments();
+            for (QueryDocumentSnapshot doc : documents) {
+                if ((doc.getString("body")).contains(messageBody)) {
+                    priority = "1";
+                    break;
+                }
+            }
+        }
+        return priority;
+    }
+
+    public static void addEmailToFireBase(Message message, String category, String priority) {
+        try {
+            Firestore db = FirestoreClient.getFirestore();
+
+            boolean hasDuplicate = TicketFirebaseHelper.hasDuplicate(message.getHeader("Message-ID")[0]);
+            if (!hasDuplicate) {
+                Map<String, Object> data = new HashMap<>();
+                data.put("subject", message.getSubject());
+                data.put("body", TicketFirebaseHelper.getTextFromMessage(message));
+                data.put("from", message.getFrom()[0].toString());
+                data.put("sender", message.getHeader("Message-ID")[0]);
+                data.put("category", category);
+                data.put("priority", priority);
+                data.put("status", "1");
+                data.put("ticketStarted", new Date());
+
+                ApiFuture<WriteResult> future = db.collection("tickets").document().set(data);
+
+                System.out.println("Update time : " + future.get().getUpdateTime());
+            }
+        } catch (MessagingException | IOException | InterruptedException | ExecutionException e) {
             e.printStackTrace();
         }
     }
