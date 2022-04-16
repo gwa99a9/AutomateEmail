@@ -1,4 +1,4 @@
 # AutomateEmail
 
-Project for SRE
+Project for SRE V2
  
